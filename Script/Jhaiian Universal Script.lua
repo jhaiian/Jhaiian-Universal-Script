@@ -7,18 +7,81 @@ local runService = game:GetService("RunService")
 local DEFAULT_SPEED = 16
 local DEFAULT_JUMP = 50
 
+-- Store settings
+local currentWalkSpeed = DEFAULT_SPEED
+local currentJumpPower = DEFAULT_JUMP
+local infiniteJumpEnabled = false
+local guiActive = true
+
+-- Store original values to restore when GUI closes
+local originalWalkSpeed = DEFAULT_SPEED
+local originalJumpPower = DEFAULT_JUMP
+
 --// GUI Initialization
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "jhaiianUniversalMobileFixed" -- Unique identifier
+screenGui.Name = "jhaiianUniversalMobileFixed"
 screenGui.Parent = player:WaitForChild("PlayerGui")
-screenGui.ResetOnSpawn = false -- Prevents GUI from disappearing on respawn
+screenGui.ResetOnSpawn = false
 
---// Mobile detection (adjust defaults for touch devices)
+--// Mobile detection
 local isMobile = uis.TouchEnabled and not uis.MouseEnabled
 if isMobile then
     DEFAULT_SPEED = 20
     DEFAULT_JUMP = 60
+    currentWalkSpeed = DEFAULT_SPEED
+    currentJumpPower = DEFAULT_JUMP
 end
+
+--// Get humanoid and apply current settings
+local function getHumanoid()
+    local success, humanoid = pcall(function()
+        local char = player.Character or player.CharacterAdded:Wait()
+        local hum = char:WaitForChild("Humanoid")
+        
+        -- Store original values if we haven't already
+        if originalWalkSpeed == DEFAULT_SPEED then
+            originalWalkSpeed = hum.WalkSpeed
+        end
+        if originalJumpPower == DEFAULT_JUMP then
+            originalJumpPower = hum.JumpPower
+        end
+        
+        -- Apply current settings if GUI is active
+        if guiActive then
+            hum.WalkSpeed = currentWalkSpeed
+            hum.JumpPower = currentJumpPower
+        end
+        
+        return hum
+    end)
+    
+    return success and humanoid or nil
+end
+
+-- Function to reset character to original values
+local function resetCharacter()
+    local humanoid = getHumanoid()
+    if humanoid then
+        humanoid.WalkSpeed = originalWalkSpeed
+        humanoid.JumpPower = originalJumpPower
+    end
+    infiniteJumpEnabled = false
+end
+
+-- Set up character added event to apply current settings
+player.CharacterAdded:Connect(function(character)
+    if guiActive then
+        -- If GUI is active, apply current settings to new character
+        character:WaitForChild("Humanoid").WalkSpeed = currentWalkSpeed
+        character:WaitForChild("Humanoid").JumpPower = currentJumpPower
+    else
+        -- If GUI is closed, reset the new character
+        resetCharacter()
+    end
+end)
+
+-- Get original values immediately
+getHumanoid()
 
 --// Main Frame (container)
 local mainFrame = Instance.new("Frame")
@@ -67,8 +130,13 @@ local closeCorner = Instance.new("UICorner")
 closeCorner.CornerRadius = UDim.new(0, 15)
 closeCorner.Parent = closeButton
 
--- Close GUI logic
+-- Close GUI logic with reset functionality
 closeButton.MouseButton1Click:Connect(function()
+    -- Reset player properties to original values
+    resetCharacter()
+    guiActive = false
+    
+    -- Remove the GUI
     screenGui:Destroy()
 end)
 
@@ -176,28 +244,21 @@ local function createSlider(name, posY, default, callback)
     callback(default)
 end
 
---// Helper: Get Humanoid safely
-local function getHumanoid()
-    local success, humanoid = pcall(function()
-        local char = player.Character or player.CharacterAdded:Wait()
-        return char:WaitForChild("Humanoid")
-    end)
-    return success and humanoid or nil
-end
-
 -- Walk Speed Slider
-createSlider("Walk Speed", 0.2, DEFAULT_SPEED, function(value)
+createSlider("Walk Speed", 0.2, currentWalkSpeed, function(value)
+    currentWalkSpeed = (value == 0) and DEFAULT_SPEED or value
     local humanoid = getHumanoid()
     if humanoid then
-        humanoid.WalkSpeed = (value == 0) and DEFAULT_SPEED or value
+        humanoid.WalkSpeed = currentWalkSpeed
     end
 end)
 
 -- Jump Power Slider
-createSlider("Jump Power", 0.45, DEFAULT_JUMP, function(value)
+createSlider("Jump Power", 0.45, currentJumpPower, function(value)
+    currentJumpPower = (value == 0) and DEFAULT_JUMP or value
     local humanoid = getHumanoid()
     if humanoid then
-        humanoid.JumpPower = (value == 0) and DEFAULT_JUMP or value
+        humanoid.JumpPower = currentJumpPower
     end
 end)
 
@@ -216,16 +277,15 @@ local infBtnCorner = Instance.new("UICorner")
 infBtnCorner.CornerRadius = UDim.new(0, 6)
 infBtnCorner.Parent = infBtn
 
-local infiniteJump = false
 infBtn.MouseButton1Click:Connect(function()
-    infiniteJump = not infiniteJump
-    infBtn.Text = "Infinite Jump: " .. (infiniteJump and "ON" or "OFF")
-    infBtn.BackgroundColor3 = infiniteJump and Color3.fromRGB(40, 100, 60) or Color3.fromRGB(25, 50, 90)
+    infiniteJumpEnabled = not infiniteJumpEnabled
+    infBtn.Text = "Infinite Jump: " .. (infiniteJumpEnabled and "ON" or "OFF")
+    infBtn.BackgroundColor3 = infiniteJumpEnabled and Color3.fromRGB(40, 100, 60) or Color3.fromRGB(25, 50, 90)
 end)
 
 -- Allow infinite jumps if toggle is ON
 uis.JumpRequest:Connect(function()
-    if infiniteJump then
+    if infiniteJumpEnabled and guiActive then
         local humanoid = getHumanoid()
         if humanoid then
             humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
