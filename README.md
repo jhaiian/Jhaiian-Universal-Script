@@ -1,4 +1,4 @@
-# JHAIIAN Universal Script  
+# Jhaiian Universal Script  
 
 A sleek, mobile-friendly Roblox universal script featuring:  
 - 🎛️ **WalkSpeed Slider** – adjust player speed on the fly  
@@ -21,6 +21,30 @@ A sleek, mobile-friendly Roblox universal script featuring:
 ## 🚀 Installation
 1. Copy the script from this repository.  
 2. Paste it into your Roblox executor.  
+3. Run the script.  
+4. Adjust sliders or toggle Infinite Jump as desired.  
+
+---
+
+## 🛠️ Requirements
+- Roblox Executor (PC or Mobile supported)  
+- Basic knowledge of script execution  
+
+---
+
+## ⚡ Notes
+- GUI is fully responsive for mobile users.  
+- Built with performance and simplicity in mind.  
+
+---
+
+## 📜 License
+This project is licensed under the **Jhaiian Custom License**.  
+- Redistribution is prohibited without explicit permission.  
+- Modifications for personal use are allowed.  
+- Commercial usage or re-uploading without credit is strictly forbidden.  
+
+For full terms, see the [`LICENSE`](LICENSE) file in this repository.2. Paste it into your Roblox executor.  
 3. Run the script.  
 4. Adjust sliders or toggle Infinite Jump as desired.  
 
