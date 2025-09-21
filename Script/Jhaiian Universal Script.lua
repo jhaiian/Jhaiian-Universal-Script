@@ -2,6 +2,7 @@
 local player = game.Players.LocalPlayer
 local uis = game:GetService("UserInputService")
 local runService = game:GetService("RunService")
+local VirtualUser = game:GetService('VirtualUser')
 
 -- Default humanoid values
 local DEFAULT_SPEED = 16
@@ -11,11 +12,15 @@ local DEFAULT_JUMP = 50
 local currentWalkSpeed = DEFAULT_SPEED
 local currentJumpPower = DEFAULT_JUMP
 local infiniteJumpEnabled = false
+local antiAfkEnabled = false
 local guiActive = true
 
 -- Store original values to restore when GUI closes
 local originalWalkSpeed = DEFAULT_SPEED
 local originalJumpPower = DEFAULT_JUMP
+
+-- Anti-AFK connection
+local antiAfkConnection = nil
 
 --// GUI Initialization
 local screenGui = Instance.new("ScreenGui")
@@ -66,6 +71,30 @@ local function resetCharacter()
         humanoid.JumpPower = originalJumpPower
     end
     infiniteJumpEnabled = false
+    
+    -- Disable Anti-AFK
+    if antiAfkConnection then
+        antiAfkConnection:Disconnect()
+        antiAfkConnection = nil
+    end
+    antiAfkEnabled = false
+end
+
+-- Function to toggle Anti-AFK
+local function toggleAntiAfk(enabled)
+    antiAfkEnabled = enabled
+    
+    if antiAfkConnection then
+        antiAfkConnection:Disconnect()
+        antiAfkConnection = nil
+    end
+    
+    if enabled then
+        antiAfkConnection = player.Idled:Connect(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end)
+    end
 end
 
 -- Set up character added event to apply current settings
@@ -85,7 +114,7 @@ getHumanoid()
 
 --// Main Frame (container)
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = isMobile and UDim2.new(0, 400, 0, 350) or UDim2.new(0, 350, 0, 300)
+mainFrame.Size = isMobile and UDim2.new(0, 400, 0, 400) or UDim2.new(0, 350, 0, 350)
 mainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(10, 20, 40)
 mainFrame.BorderSizePixel = 0
@@ -245,7 +274,7 @@ local function createSlider(name, posY, default, callback)
 end
 
 -- Walk Speed Slider
-createSlider("Walk Speed", 0.2, currentWalkSpeed, function(value)
+createSlider("Walk Speed", 0.15, currentWalkSpeed, function(value)
     currentWalkSpeed = (value == 0) and DEFAULT_SPEED or value
     local humanoid = getHumanoid()
     if humanoid then
@@ -254,7 +283,7 @@ createSlider("Walk Speed", 0.2, currentWalkSpeed, function(value)
 end)
 
 -- Jump Power Slider
-createSlider("Jump Power", 0.45, currentJumpPower, function(value)
+createSlider("Jump Power", 0.35, currentJumpPower, function(value)
     currentJumpPower = (value == 0) and DEFAULT_JUMP or value
     local humanoid = getHumanoid()
     if humanoid then
@@ -265,7 +294,7 @@ end)
 --// Infinite Jump Toggle Button
 local infBtn = Instance.new("TextButton")
 infBtn.Size = UDim2.new(0.9, 0, 0, isMobile and 60 or 50)
-infBtn.Position = UDim2.new(0.05, 0, 0.75, 0)
+infBtn.Position = UDim2.new(0.05, 0, 0.55, 0)
 infBtn.BackgroundColor3 = Color3.fromRGB(25, 50, 90)
 infBtn.Text = "Infinite Jump: OFF"
 infBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -281,6 +310,28 @@ infBtn.MouseButton1Click:Connect(function()
     infiniteJumpEnabled = not infiniteJumpEnabled
     infBtn.Text = "Infinite Jump: " .. (infiniteJumpEnabled and "ON" or "OFF")
     infBtn.BackgroundColor3 = infiniteJumpEnabled and Color3.fromRGB(40, 100, 60) or Color3.fromRGB(25, 50, 90)
+end)
+
+--// Anti-AFK Toggle Button
+local afkBtn = Instance.new("TextButton")
+afkBtn.Size = UDim2.new(0.9, 0, 0, isMobile and 60 or 50)
+afkBtn.Position = UDim2.new(0.05, 0, 0.75, 0)
+afkBtn.BackgroundColor3 = Color3.fromRGB(25, 50, 90)
+afkBtn.Text = "Anti-AFK: OFF"
+afkBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+afkBtn.Font = Enum.Font.GothamBold
+afkBtn.TextScaled = true
+afkBtn.Parent = contentContainer
+
+local afkBtnCorner = Instance.new("UICorner")
+afkBtnCorner.CornerRadius = UDim.new(0, 6)
+afkBtnCorner.Parent = afkBtn
+
+afkBtn.MouseButton1Click:Connect(function()
+    antiAfkEnabled = not antiAfkEnabled
+    afkBtn.Text = "Anti-AFK: " .. (antiAfkEnabled and "ON" or "OFF")
+    afkBtn.BackgroundColor3 = antiAfkEnabled and Color3.fromRGB(40, 100, 60) or Color3.fromRGB(25, 50, 90)
+    toggleAntiAfk(antiAfkEnabled)
 end)
 
 -- Allow infinite jumps if toggle is ON
