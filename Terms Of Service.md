@@ -3,7 +3,7 @@
 By using the **Jhaiian Universal Script**, you agree to the following terms:
 
 ## 1. Code Transparency & Safety
-- The entire script can be viewed at `/Script/Jhaiian Universal Script.lua` in this repository.  
+- The entire script can be viewed at [Script/Jhaiian Universal Script.lua](https://github.com/jhaiian/Jhaiian-Universal-Script/blob/main/Script/Jhaiian%20Universal%20Script.lua).  
 - It does **not** contain code to steal your account, in-game items, or any personal information.  
 - If you cannot read or understand Lua code, you may use an AI code analyzer or script scanner to confirm its safety.  
 - We encourage you to review the code yourself or with tools before running it, to remove any doubt.
