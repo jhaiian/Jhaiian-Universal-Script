@@ -1,0 +1,1 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/jhaiian/Jhaiian-Universal-Script/refs/heads/main/Script/Jhaiian%20Universal%20Script.lua"))()
