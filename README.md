@@ -1,53 +1,42 @@
-# Jhaiian Universal Script  
+# Jhaiian Universal Script
 
-A sleek, mobile-friendly Roblox universal script featuring:  
-- 🎛️ **WalkSpeed Slider** – adjust player speed on the fly  
-- 🪂 **JumpPower Slider** – control jump height effortlessly  
-- 🔄 **Infinite Jump Toggle** – fly sky-high with a single switch  
-- 📱 **PC & Mobile Optimized** – smooth touch & key support  
-- 🎨 **Beautiful Darkest-Blue GUI** – clean, modern design  
+A simple, dark-blue GUI exploit script for Roblox with WalkSpeed, JumpPower, Infinite Jump, and Anti-AFK support.  
+Designed to be lightweight, mobile-friendly, and fully open-source.
 
 ---
 
-## 📖 Features
-- Default WalkSpeed set to **16**  
-- Default JumpPower set to **50**  
-- Sliders automatically reset when set to `0`  
-- Toggle button for Infinite Jump  
-- User Input Service optimized for both keyboard and touchscreen  
+## ✨ Features
+- WalkSpeed & JumpPower sliders  
+- Infinite Jump toggle  
+- Anti-AFK (prevents idle kick)  
+- Clean and responsive dark-blue GUI  
+- Fully open-source, code available for inspection
 
 ---
 
-## 🚀 Installation
-1. Copy the script from this repository.  
-2. Paste it into your Roblox executor.  
-3. Run the script.  
-4. Adjust sliders or toggle Infinite Jump as desired.  
+## 📥 How to Use
+Copy and paste this into your executor:
+
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/jhaiian/Jhaiian-Universal-Script/refs/heads/main/Script/Jhaiian%20Universal%20Script.lua"))()
+```
 
 ---
 
-## 🛠️ Requirements
-- Roblox Executor (PC or Mobile supported)  
-- Basic knowledge of script execution  
+## 🔍 Transparency
+You can view the **entire source code** here:  
+[`/Script/Jhaiian Universal Script.lua`](https://github.com/jhaiian/Jhaiian-Universal-Script/blob/main/Script/Jhaiian%20Universal%20Script.lua)
+
+This script is safe to use — it does **not** steal in-game items, Robux, or personal data.  
+If you cannot read Lua code yourself, you can use an AI/code analyzer to verify its safety.
 
 ---
 
-## ⚡ Notes
-- GUI is fully responsive for mobile users.  
-- Built with performance and simplicity in mind.  
+## ⚠️ Terms of Service
+By using this script, you agree to the terms outlined in the [Terms of Service](./Terms%20Of%20Service.md).  
 
 ---
 
 ## 📜 License
-This project is licensed under the **Jhaiian Custom License**.  
-- Redistribution is prohibited without explicit permission.  
-- Modifications for personal use are allowed.  
-- Commercial usage or re-uploading without credit is strictly forbidden.  
-
-For full terms, see the [`License.md`](License.md) file in this repository.  
-
----
-
-## 📑 Terms of Service
-By using this script, you agree to certain terms including safety, liability, and Roblox ToS compliance.  
-You can read the full terms in the [`Terms Of Service.md`](Terms%20Of%20Service.md) file in this repository.
+This project is licensed under the **Custom Jhaiian License**.  
+See the [License](./License.md) file for details.
