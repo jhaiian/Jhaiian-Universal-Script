@@ -44,28 +44,10 @@ This project is licensed under the **Jhaiian Custom License**.
 - Modifications for personal use are allowed.  
 - Commercial usage or re-uploading without credit is strictly forbidden.  
 
-For full terms, see the [`LICENSE`](LICENSE) file in this repository.2. Paste it into your Roblox executor.  
-3. Run the script.  
-4. Adjust sliders or toggle Infinite Jump as desired.  
+For full terms, see the [`License.md`](License.md) file in this repository.  
 
 ---
 
-## 🛠️ Requirements
-- Roblox Executor (PC or Mobile supported)  
-- Basic knowledge of script execution  
-
----
-
-## ⚡ Notes
-- GUI is fully responsive for mobile users.  
-- Built with performance and simplicity in mind.  
-
----
-
-## 📜 License
-This project is licensed under the **JHAIIAN Custom License**.  
-- Redistribution is prohibited without explicit permission.  
-- Modifications for personal use are allowed.  
-- Commercial usage or re-uploading without credit is strictly forbidden.  
-
-For full terms, see the [`LICENSE`](LICENSE) file in this repository.
+## 📑 Terms of Service
+By using this script, you agree to certain terms including safety, liability, and Roblox ToS compliance.  
+You can read the full terms in the [`Terms Of Service.md`](Terms%20Of%20Service.md) file in this repository.
