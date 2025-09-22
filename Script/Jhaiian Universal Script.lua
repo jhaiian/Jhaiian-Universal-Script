@@ -3,6 +3,7 @@ local player = game.Players.LocalPlayer
 local uis = game:GetService("UserInputService")
 local runService = game:GetService("RunService")
 local VirtualUser = game:GetService('VirtualUser')
+local HttpService = game:GetService("HttpService")
 
 -- Default humanoid values
 local DEFAULT_SPEED = 16
@@ -21,6 +22,61 @@ local originalJumpPower = DEFAULT_JUMP
 
 -- Anti-AFK connection
 local antiAfkConnection = nil
+
+-- Configuration paths
+local configFolder = "Jhaiian"
+local configFileName = "Jhaiian Universal Script.json"
+local configPath = configFolder .. "/" .. configFileName
+
+--// Configuration Management Functions
+local function saveConfig()
+    local config = {
+        WalkSpeed = currentWalkSpeed,
+        JumpPower = currentJumpPower,
+        InfiniteJump = infiniteJumpEnabled,
+        AntiAFK = antiAfkEnabled
+    }
+    
+    local success, err = pcall(function()
+        -- Create folder if it doesn't exist
+        if not isfolder(configFolder) then
+            makefolder(configFolder)
+        end
+        
+        -- Write configuration to file
+        writefile(configPath, HttpService:JSONEncode(config))
+    end)
+    
+    if not success then
+        warn("Failed to save configuration: " .. tostring(err))
+    end
+end
+
+local function loadConfig()
+    local success, config = pcall(function()
+        if isfile(configPath) then
+            return HttpService:JSONDecode(readfile(configPath))
+        end
+        return nil
+    end)
+    
+    if success and config then
+        -- Apply loaded configuration
+        currentWalkSpeed = config.WalkSpeed or DEFAULT_SPEED
+        currentJumpPower = config.JumpPower or DEFAULT_JUMP
+        infiniteJumpEnabled = config.InfiniteJump or false
+        antiAfkEnabled = config.AntiAFK or false
+        
+        -- Apply Anti-AFK setting if enabled
+        if antiAfkEnabled then
+            toggleAntiAfk(true)
+        end
+        
+        return true
+    end
+    
+    return false
+end
 
 --// GUI Initialization
 local screenGui = Instance.new("ScreenGui")
@@ -109,12 +165,15 @@ player.CharacterAdded:Connect(function(character)
     end
 end)
 
+-- Load configuration before creating GUI
+loadConfig()
+
 -- Get original values immediately
 getHumanoid()
 
 --// Main Frame (container)
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = isMobile and UDim2.new(0, 400, 0, 400) or UDim2.new(0, 350, 0, 350)
+mainFrame.Size = isMobile and UDim2.new(0, 400, 0, 450) or UDim2.new(0, 350, 0, 400)
 mainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(10, 20, 40)
 mainFrame.BorderSizePixel = 0
@@ -176,19 +235,36 @@ contentContainer.Position = UDim2.new(0, 0, 0, title.AbsoluteSize.Y)
 contentContainer.BackgroundTransparency = 1
 contentContainer.Parent = mainFrame
 
+-- Add padding to the content container to space out elements
+local containerPadding = Instance.new("UIPadding")
+containerPadding.PaddingTop = UDim.new(0, 10)
+containerPadding.PaddingBottom = UDim.new(0, 10)
+containerPadding.Parent = contentContainer
+
 --// Reusable Slider Creator
-local function createSlider(name, posY, default, callback)
-    -- Frame container for each slider
+local function createSlider(name, default, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0.9, 0, 0, isMobile and 80 or 70)
-    frame.Position = UDim2.new(0.05, 0, posY, 0)
     frame.BackgroundColor3 = Color3.fromRGB(25, 50, 90)
     frame.Parent = contentContainer
+    
+    -- Add margin bottom to create space between elements
+    local margin = Instance.new("UIPadding")
+    margin.PaddingBottom = UDim.new(0, 15) -- Bottom margin
+    margin.Parent = frame
     
     -- Rounded corners
     local frameCorner = Instance.new("UICorner")
     frameCorner.CornerRadius = UDim.new(0, 6)
     frameCorner.Parent = frame
+
+    -- Add padding inside the frame
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, 5)
+    padding.PaddingBottom = UDim.new(0, 5)
+    padding.PaddingLeft = UDim.new(0, 5)
+    padding.PaddingRight = UDim.new(0, 5)
+    padding.Parent = frame
 
     -- Label for slider name
     local title = Instance.new("TextLabel")
@@ -271,67 +347,88 @@ local function createSlider(name, posY, default, callback)
     -- Set initial knob position
     knob.Position = UDim2.new(default / 100, -knob.AbsoluteSize.X/2, -0.25, 0)
     callback(default)
+    
+    return frame
 end
 
+--// Reusable Toggle Button Creator
+local function createToggleButton(text, initialState, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.9, 0, 0, isMobile and 50 or 45)
+    button.BackgroundColor3 = Color3.fromRGB(25, 50, 90)
+    button.Text = text .. ": " .. (initialState and "ON" or "OFF")
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Font = Enum.Font.GothamBold
+    button.TextScaled = true
+    button.Parent = contentContainer
+    
+    -- Add margin bottom to create space between elements
+    local margin = Instance.new("UIPadding")
+    margin.PaddingBottom = UDim.new(0, 15) -- Bottom margin
+    margin.Parent = button
+    
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim.new(0, 6)
+    buttonCorner.Parent = button
+    
+    -- Add padding to button
+    local buttonPadding = Instance.new("UIPadding")
+    buttonPadding.PaddingTop = UDim.new(0, 5)
+    buttonPadding.PaddingBottom = UDim.new(0, 5)
+    buttonPadding.Parent = button
+    
+    -- Set initial color
+    button.BackgroundColor3 = initialState and Color3.fromRGB(40, 100, 60) or Color3.fromRGB(25, 50, 90)
+    
+    button.MouseButton1Click:Connect(function()
+        local newState = not initialState
+        initialState = newState
+        button.Text = text .. ": " .. (newState and "ON" or "OFF")
+        button.BackgroundColor3 = newState and Color3.fromRGB(40, 100, 60) or Color3.fromRGB(25, 50, 90)
+        callback(newState)
+    end)
+    
+    return button
+end
+
+-- Create UI Layout with proper spacing
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 15) -- Space between elements
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.VerticalAlignment = Enum.VerticalAlignment.Top
+layout.Parent = contentContainer
+
 -- Walk Speed Slider
-createSlider("Walk Speed", 0.15, currentWalkSpeed, function(value)
+local walkSpeedSlider = createSlider("Walk Speed", currentWalkSpeed, function(value)
     currentWalkSpeed = (value == 0) and DEFAULT_SPEED or value
     local humanoid = getHumanoid()
     if humanoid then
         humanoid.WalkSpeed = currentWalkSpeed
     end
+    saveConfig() -- Save configuration when changed
 end)
 
 -- Jump Power Slider
-createSlider("Jump Power", 0.35, currentJumpPower, function(value)
+local jumpPowerSlider = createSlider("Jump Power", currentJumpPower, function(value)
     currentJumpPower = (value == 0) and DEFAULT_JUMP or value
     local humanoid = getHumanoid()
     if humanoid then
         humanoid.JumpPower = currentJumpPower
     end
+    saveConfig() -- Save configuration when changed
 end)
 
---// Infinite Jump Toggle Button
-local infBtn = Instance.new("TextButton")
-infBtn.Size = UDim2.new(0.9, 0, 0, isMobile and 60 or 50)
-infBtn.Position = UDim2.new(0.05, 0, 0.55, 0)
-infBtn.BackgroundColor3 = Color3.fromRGB(25, 50, 90)
-infBtn.Text = "Infinite Jump: OFF"
-infBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-infBtn.Font = Enum.Font.GothamBold
-infBtn.TextScaled = true
-infBtn.Parent = contentContainer
-
-local infBtnCorner = Instance.new("UICorner")
-infBtnCorner.CornerRadius = UDim.new(0, 6)
-infBtnCorner.Parent = infBtn
-
-infBtn.MouseButton1Click:Connect(function()
-    infiniteJumpEnabled = not infiniteJumpEnabled
-    infBtn.Text = "Infinite Jump: " .. (infiniteJumpEnabled and "ON" or "OFF")
-    infBtn.BackgroundColor3 = infiniteJumpEnabled and Color3.fromRGB(40, 100, 60) or Color3.fromRGB(25, 50, 90)
+-- Infinite Jump Toggle Button
+local infiniteJumpButton = createToggleButton("Infinite Jump", infiniteJumpEnabled, function(state)
+    infiniteJumpEnabled = state
+    saveConfig() -- Save configuration when changed
 end)
 
---// Anti-AFK Toggle Button
-local afkBtn = Instance.new("TextButton")
-afkBtn.Size = UDim2.new(0.9, 0, 0, isMobile and 60 or 50)
-afkBtn.Position = UDim2.new(0.05, 0, 0.75, 0)
-afkBtn.BackgroundColor3 = Color3.fromRGB(25, 50, 90)
-afkBtn.Text = "Anti-AFK: OFF"
-afkBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-afkBtn.Font = Enum.Font.GothamBold
-afkBtn.TextScaled = true
-afkBtn.Parent = contentContainer
-
-local afkBtnCorner = Instance.new("UICorner")
-afkBtnCorner.CornerRadius = UDim.new(0, 6)
-afkBtnCorner.Parent = afkBtn
-
-afkBtn.MouseButton1Click:Connect(function()
-    antiAfkEnabled = not antiAfkEnabled
-    afkBtn.Text = "Anti-AFK: " .. (antiAfkEnabled and "ON" or "OFF")
-    afkBtn.BackgroundColor3 = antiAfkEnabled and Color3.fromRGB(40, 100, 60) or Color3.fromRGB(25, 50, 90)
-    toggleAntiAfk(antiAfkEnabled)
+-- Anti-AFK Toggle Button
+local antiAfkButton = createToggleButton("Anti-AFK", antiAfkEnabled, function(state)
+    antiAfkEnabled = state
+    toggleAntiAfk(state)
+    saveConfig() -- Save configuration when changed
 end)
 
 -- Allow infinite jumps if toggle is ON
