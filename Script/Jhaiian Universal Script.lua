@@ -38,6 +38,11 @@ local function saveConfig()
     }
     
     local success, err = pcall(function()
+        -- Check if file functions are available
+        if not writefile or not makefolder or not isfolder then
+            return false
+        end
+        
         -- Create folder if it doesn't exist
         if not isfolder(configFolder) then
             makefolder(configFolder)
@@ -45,17 +50,26 @@ local function saveConfig()
         
         -- Write configuration to file
         writefile(configPath, HttpService:JSONEncode(config))
+        return true
     end)
     
     if not success then
-        warn("Failed to save configuration: " .. tostring(err))
+        warn("Jhaiian Config: Failed to save configuration - " .. tostring(err))
     end
+    
+    return success
 end
 
 local function loadConfig()
     local success, config = pcall(function()
+        -- Check if file functions are available
+        if not readfile or not isfile then
+            return nil
+        end
+        
         if isfile(configPath) then
-            return HttpService:JSONDecode(readfile(configPath))
+            local fileContent = readfile(configPath)
+            return HttpService:JSONDecode(fileContent)
         end
         return nil
     end)
@@ -72,13 +86,21 @@ local function loadConfig()
             toggleAntiAfk(true)
         end
         
+        print("Jhaiian Config: Successfully loaded configuration")
         return true
+    else
+        print("Jhaiian Config: Using default configuration")
+        return false
     end
-    
-    return false
 end
 
 --// GUI Initialization
+
+-- First, check if there's already a GUI with the same name and remove it
+if player.PlayerGui:FindFirstChild("jhaiianUniversalMobileFixed") then
+    player.PlayerGui:FindFirstChild("jhaiianUniversalMobileFixed"):Destroy()
+end
+
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "jhaiianUniversalMobileFixed"
 screenGui.Parent = player:WaitForChild("PlayerGui")
@@ -165,8 +187,8 @@ player.CharacterAdded:Connect(function(character)
     end
 end)
 
--- Load configuration before creating GUI
-loadConfig()
+-- Load configuration before creating GUI (with error handling)
+local configLoaded = pcall(loadConfig)
 
 -- Get original values immediately
 getHumanoid()
@@ -459,7 +481,6 @@ if isMobile then
     minimizeCorner.Parent = minimizeBtn
     
     local minimized = false
-    local originalSize = mainFrame.Size
     
     minimizeBtn.MouseButton1Click:Connect(function()
         minimized = not minimized
@@ -469,7 +490,7 @@ if isMobile then
             minimizeBtn.Text = "+"
         else
             contentContainer.Visible = true
-            mainFrame.Size = originalSize
+            mainFrame.Size = isMobile and UDim2.new(0, 400, 0, 450) or UDim2.new(0, 350, 0, 400)
             minimizeBtn.Text = "_"
         end
     end)
@@ -483,16 +504,21 @@ if isMobile then
         if absolutePosition.X + absoluteSize.X > viewportSize.X then
             mainFrame.Position = UDim2.new(0, viewportSize.X - absoluteSize.X - 10, mainFrame.Position.Y.Scale, mainFrame.Position.Y.Offset)
         end
+        
         if absolutePosition.Y + absoluteSize.Y > viewportSize.Y then
             mainFrame.Position = UDim2.new(mainFrame.Position.X.Scale, mainFrame.Position.X.Offset, 0, viewportSize.Y - absoluteSize.Y - 10)
         end
+        
         if absolutePosition.X < 0 then
             mainFrame.Position = UDim2.new(0, 10, mainFrame.Position.Y.Scale, mainFrame.Position.Y.Offset)
         end
+        
         if absolutePosition.Y < 0 then
             mainFrame.Position = UDim2.new(mainFrame.Position.X.Scale, mainFrame.Position.X.Offset, 0, 10)
         end
     end
+
+    -- Run the check once after the UI is created
     task.wait(0.5)
     ensureOnScreen()
 end
